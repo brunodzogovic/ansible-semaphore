@@ -1,6 +1,6 @@
 services:
 
-  semaphore:
+  semaphore-kubespray:
     #platform: linux/amd64
     ## uncomment this section and comment out the mysql section to use postgres instead of mysql
   #postgres:
@@ -19,10 +19,10 @@ services:
       - 3000:3000
     build:
       context: .
-    image: semaphoreui/semaphore:latest
+    image: brunodzogovic/semaphore-kubespray:1.0
     volumes:
       - ${PWD}/requirements.txt:/etc/semaphore/requirements.txt
-    container_name: semaphore
+    container_name: semaphore-kubespray
     environment:
       SEMAPHORE_DB_USER: semaphore
       SEMAPHORE_DB_PASS: semaphore

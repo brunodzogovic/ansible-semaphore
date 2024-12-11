@@ -1,5 +1,5 @@
 # Build from Debian based Python image
-FROM python:3.13.0b2-slim-bookworm
+FROM python:3.13.1-slim-bullseye
 
 # Set default env variables
 ENV SEMAPHORE_DB_USER=semaphore
@@ -23,17 +23,18 @@ ENV SEMAPHORE_LDAP_SEARCH_FILTER: "(\u0026(uid=%s)(memberOf=cn=ipausers,cn=group
 ENV TZ: UTC
 
 # Install required packages
-RUN apt-get -y update && apt-get -y install git wget gettext python3-pip
+RUN apt-get -y update && apt-get -y install git wget gettext
+RUN git clone https://github.com/kubernetes-sigs/kubespray /tmp/kubespray
+RUN cd /tmp/kubespray && pip install -U -r requirements.txt
 # Download and install semaphore
-RUN pip3 install -U pip
-RUN cd /tmp && wget https://github.com/semaphoreui/semaphore/releases/download/v2.10.7/semaphore_2.10.7_linux_amd64.deb
-RUN dpkg -i /tmp/semaphore_2.10.7_linux_amd64.deb 
+RUN cd /tmp && wget https://github.com/semaphoreui/semaphore/releases/download/v2.10.43/semaphore_2.10.43_linux_amd64.deb 
+RUN dpkg -i /tmp/semaphore_2.10.43_linux_amd64.deb 
 # Copy semaphore config
 COPY config_template.json /semaphore/config_template.json
 COPY entrypoint.sh /semaphore/entrypoint.sh
 RUN chmod +x /semaphore/entrypoint.sh
 
 # Clean up
-RUN rm -rf /tmp/kubespray && rm -rf /tmp/semaphore_2.10.7_linux_amd64.deb
+RUN rm -rf /tmp/kubespray && rm -rf /tmp/semaphore_2.10.43_linux_amd64.deb
 # Startup process
 ENTRYPOINT ["/semaphore/entrypoint.sh"]
