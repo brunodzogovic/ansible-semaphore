@@ -33,7 +33,7 @@ services:
         SEMAPHORE_ADMIN: ${SEMAPHORE_ADMIN}
         SEMAPHORE_ACCESS_KEY_ENCRYPTION: ${SEMAPHORE_ACCESS_KEY_ENCRYPTION}
         SEMAPHORE_LDAP_PASSWORD: ${SEMAPHORE_LDAP_PASSWORD}
-    image: ${DOCKER_REPOSITORY_NAME}/${CUSTOM_IMAGE_NAME}:${CUSTOM_IMAGE_VERSION}
+    image: ${DOCKER_REPOSITORY_NAME}/${CUSTOM_IMAGE_NAME}:${SEMAPHORE_VERSION}
     volumes:
       - ${PWD}/requirements.txt:/etc/semaphore/requirements.txt
     container_name: semaphore-kubespray
