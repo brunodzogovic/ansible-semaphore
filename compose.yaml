@@ -11,7 +11,7 @@ services:
     #  - semaphore-postgres:/var/lib/postgresql/data
     #environment:
     #  POSTGRES_USER: ${DB_USER}
-    #  POSTGRES_PASSWORD: ${DB_PASSWORD}
+    #  POSTGRES_PASSWORD: ${DB_PASS}
     #  POSTGRES_DB: ${SEMAPHORE_DB}
   # if you wish to use postgres, comment the mysql service section below
     restart: unless-stopped
@@ -50,7 +50,7 @@ services:
       SEMAPHORE_ADMIN_EMAIL: ${SEMAPHORE_ADMIN_EMAIL}
       SEMAPHORE_ADMIN: ${SEMAPHORE_ADMIN}
       SEMAPHORE_ACCESS_KEY_ENCRYPTION: ${SEMAPHORE_ACCESS_KEY_ENCRYPTION}
-      SEMAPHORE_LDAP_ACTIVATED: 'no' # if you wish to use ldap, set to: 'yes' 
+      SEMAPHORE_LDAP_ACTIVATED: 'no' # if you wish to use ldap, set to: 'yes'
       SEMAPHORE_LDAP_HOST: dc01.local.example.com
       SEMAPHORE_LDAP_PORT: '636'
       SEMAPHORE_LDAP_NEEDTLS: 'yes'
@@ -73,9 +73,9 @@ services:
       MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
       MYSQL_DATABASE: ${SEMAPHORE_DB}
       MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASS}
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p${DB_PASS}"]
       interval: 10s
       timeout: 3s
       retries: 3
