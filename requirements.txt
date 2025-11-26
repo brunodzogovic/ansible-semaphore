@@ -4,4 +4,4 @@ jsonschema>=4.25.1
 netaddr>=1.3.0
 # optional but often handy with k8s tooling:
 openshift>=0.13.2
-python3-passlib>=1.7.4
+passlib>=1.7.4
