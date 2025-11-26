@@ -1,6 +1,7 @@
-ikubernetes>=26.1.0
-pyyaml>=6.0.1
-jsonschema>=4.22.0
+kubernetes>=34.1.0
+pyyaml>=6.0.3
+jsonschema>=4.25.1
 netaddr>=1.3.0
 # optional but often handy with k8s tooling:
 openshift>=0.13.2
+python3-passlib>=1.7.4
