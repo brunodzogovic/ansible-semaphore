@@ -39,7 +39,9 @@ ENV TZ: UTC
 # Install required packages
 RUN apt-get -y update && apt-get -y install git wget gettext
 RUN git clone https://github.com/kubernetes-sigs/kubespray /tmp/kubespray
-RUN cd /tmp/kubespray && pip install -U -r requirements.txt
+COPY requirements.txt /tmp/semaphore-requirements.txt
+RUN cd /tmp/kubespray && pip install -U -r requirements.txt \
+    && pip install -U -r /tmp/semaphore-requirements.txt
 # Download and install semaphore
 RUN cd /tmp && wget https://github.com/semaphoreui/semaphore/releases/download/v${SEMAPHORE_VERSION}/semaphore_${SEMAPHORE_VERSION}_linux_amd64.deb 
 RUN dpkg -i /tmp/semaphore_${SEMAPHORE_VERSION}_linux_amd64.deb 
