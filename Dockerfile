@@ -1,4 +1,5 @@
 # Build from Debian based Python image
+FROM ghcr.io/opentofu/opentofu:minimal AS tofu
 FROM python:3.13.1-slim-bullseye
 
 # Set default buildtime variables
@@ -37,16 +38,19 @@ ENV SEMAPHORE_LDAP_SEARCH_FILTER: "(\u0026(uid=%s)(memberOf=cn=ipausers,cn=group
 ENV TZ: UTC
 
 # Install required packages
-RUN apt-get -y update && apt-get -y install curl gpg lsb-release ca-certificates git wget gettext
+COPY --from=tofu /usr/local/bin/tofu /usr/local/bin/tofu
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    gettext \
+    curl \
+    gnupg \
+    ca-certificates \
+    lsb-release \
+    unzip
 RUN git clone https://github.com/kubernetes-sigs/kubespray /tmp/kubespray
 COPY requirements.txt /tmp/semaphore-requirements.txt
-RUN mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey | gpg --dearmor -o /etc/apt/keyrings/opentofu.gpg && \
-    chmod a+r /etc/apt/keyrings/opentofu.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/opentofu.gpg] https://packages.opentofu.org/opentofu/tofu/deb/ any main" \
-      > /etc/apt/sources.list.d/opentofu.list && \
-    apt-get update && \
-    apt-get install -y tofu
+
 RUN cd /tmp/kubespray && pip install -U -r requirements.txt \
     && pip install -U -r /tmp/semaphore-requirements.txt
 # Download and install semaphore
