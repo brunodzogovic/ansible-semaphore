@@ -60,7 +60,9 @@ RUN dpkg -i /tmp/semaphore_${SEMAPHORE_VERSION}_linux_amd64.deb
 COPY config_template.json /semaphore/config_template.json
 COPY entrypoint.sh /semaphore/entrypoint.sh
 RUN chmod +x /semaphore/entrypoint.sh
-
+# Install Ansible requirements
+COPY requirements.yml /tmp/requirements.yml
+RUN ansible-galaxy collection install -r /tmp/requirements.yml
 # Clean up
 RUN rm -rf /tmp/kubespray && rm -rf /tmp/semaphore_${SEMAPHORE_VERSION}_amd64.deb
 # Startup process
