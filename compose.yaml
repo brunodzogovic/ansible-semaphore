@@ -17,6 +17,8 @@ services:
     restart: unless-stopped
     ports:
       - 3000:3000
+    volumes:
+      - /opt/semaphore/vyos-backups:/etc/vyos-backups
     build:
       context: .
       dockerfile: Dockerfile
@@ -26,7 +28,7 @@ services:
         DB_PASS: ${DB_PASS}
         DB_HOST: ${DB_HOST}
         DB_PORT: ${DB_PORT}
-        DB_DIALECT: ${DB_DIALECT}
+        DB_DIALECT/tmp/vyos-backups: ${DB_DIALECT}
         SEMAPHORE_DB: ${SEMAPHORE_DB}
         SEMAPHORE_ADMIN_PASSWORD: ${SEMAPHORE_ADMIN_PASSWORD}
         SEMAPHORE_ADMIN_NAME: ${SEMAPHORE_ADMIN_NAME}
