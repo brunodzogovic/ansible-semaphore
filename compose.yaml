@@ -18,7 +18,7 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - /opt/semaphore/vyos-backups:/etc/vyos-backups
+      - /etc/vyos-backups:/etc/vyos-backups
     build:
       context: .
       dockerfile: Dockerfile
