@@ -83,3 +83,7 @@ services:
 
 volumes:
   semaphore-mysql:
+networks:
+  ingress:
+    external: true
+    name: ingress
