@@ -1,4 +1,4 @@
 collections:
   - name: vyos.vyos
   - name: ansible.netcommon
-  - name: ubiquiti.unifi_api
+  - name: kenmoini.unifi_network
