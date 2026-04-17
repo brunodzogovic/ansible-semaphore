@@ -17,6 +17,8 @@ services:
     restart: unless-stopped
     ports:
       - 3000:3000
+    networks:
+      - ingress
     volumes:
       - /etc/vyos-backups:/etc/vyos-backups
     build:
@@ -69,6 +71,8 @@ services:
     hostname: mysql
     volumes:
       - semaphore-mysql:/var/lib/mysql
+    networks:
+      - ingress
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
       MYSQL_DATABASE: ${SEMAPHORE_DB}
