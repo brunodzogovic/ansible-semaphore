@@ -17,7 +17,7 @@ log() {
 
 fail() {
     log "ERROR: $*"
-    exit 1
+    return 1
 }
 
 require_command() {
