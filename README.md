@@ -40,7 +40,7 @@ The automatic updater requires at least:
 
 ```dotenv
 SEMAPHORE_VERSION=2.18.9
-DOCKER_REPOSITORY_NAME=brunodzogovic
+DOCKER_REPOSITORY_NAME=[docker-repo-name]
 CUSTOM_IMAGE_NAME=semaphore-kubespray
 ```
 
