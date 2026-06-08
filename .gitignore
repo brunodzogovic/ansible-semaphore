@@ -1,11 +1,18 @@
-# Ignore .env file containing sensitive environment variables
+# Ignore .env file containing local configuration and secrets
 .env
+.env.bak
+.env.rollback.*
+
+# Ignore update artifacts
+backups/
+logs/
 
 # Ignore node_modules folder
 node_modules/
 
 # Ignore Python bytecode files
 *.pyc
+__pycache__/
 
 # Ignore Docker files
 .docker/
