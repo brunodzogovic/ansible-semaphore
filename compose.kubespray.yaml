@@ -1,0 +1,7 @@
+services:
+  semaphore-kubespray:
+    build:
+      args:
+        KUBESPRAY_REF: ${KUBESPRAY_REF}
+    environment:
+      KUBESPRAY_DIR: /opt/kubespray
