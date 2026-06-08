@@ -1,0 +1,47 @@
+name: Validate Semaphore image automation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - feature/automated-semaphore-updates
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate shell scripts
+        run: |
+          bash -n scripts/update-semaphore.sh
+          bash -n scripts/install-update-cron.sh
+
+      - name: Validate Python script
+        run: |
+          python3 -m py_compile latest-version.py
+          python3 latest-version.py --help >/dev/null
+
+      - name: Validate Docker Compose configuration
+        run: |
+          cat > .env <<'EOF'
+          SEMAPHORE_VERSION=2.18.9
+          DOCKER_REPOSITORY_NAME=example.invalid/cloud-images
+          CUSTOM_IMAGE_NAME=semaphore-kubespray
+          DB_USER=semaphore
+          DB_PASS=change-me
+          DB_HOST=mysql
+          DB_PORT=3306
+          DB_DIALECT=mysql
+          SEMAPHORE_DB=semaphore
+          SEMAPHORE_ADMIN_PASSWORD=change-me
+          SEMAPHORE_ADMIN_NAME=Administrator
+          SEMAPHORE_ADMIN_EMAIL=admin@example.invalid
+          SEMAPHORE_ADMIN=admin
+          SEMAPHORE_ACCESS_KEY_ENCRYPTION=change-me-change-me-change-me
+          EOF
+          docker compose --env-file .env config >/dev/null
