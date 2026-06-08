@@ -6,7 +6,7 @@ For first-time installation and rollout, see [QUICKSTART.md](QUICKSTART.md).
 
 ## Current implementation status
 
-The repository now includes a complete host-side update mechanism for Semaphore:
+The repository includes a complete host-side update mechanism for Semaphore:
 
 - stable release discovery from the official Semaphore GitHub Releases API;
 - explicit exclusion of draft, beta, release-candidate, and other prerelease versions;
@@ -15,7 +15,7 @@ The repository now includes a complete host-side update mechanism for Semaphore:
 - image push to the repository configured in `.env`;
 - pre-upgrade MySQL backup when the bundled MySQL service is running;
 - recreation of only the `semaphore-kubespray` service;
-- HTTP and container-state health verification after deployment;
+- direct HTTP and container-state health verification after deployment;
 - rollback to the previous `.env` and previous image when an update fails;
 - removal of the superseded image from the local Docker host after a successful update;
 - optional daily cron installation;
@@ -44,7 +44,7 @@ DOCKER_REPOSITORY_NAME=brunodzogovic
 CUSTOM_IMAGE_NAME=semaphore-kubespray
 ```
 
-`DOCKER_REPOSITORY_NAME` may also contain a registry hostname and namespace, for example:
+`DOCKER_REPOSITORY_NAME` may also contain a registry hostname and namespace:
 
 ```dotenv
 DOCKER_REPOSITORY_NAME=registry.example.com/cloud-images
@@ -66,6 +66,8 @@ docker compose --env-file .env build semaphore-kubespray
 docker compose --env-file .env push semaphore-kubespray
 docker compose --env-file .env up -d
 ```
+
+Semaphore is exposed directly on port `3000`.
 
 ## Stable release detection
 
@@ -102,27 +104,14 @@ When a newer stable release exists, the script:
 5. Builds the new version-tagged image.
 6. Pushes it to `${DOCKER_REPOSITORY_NAME}/${CUSTOM_IMAGE_NAME}`.
 7. Recreates only the `semaphore-kubespray` service.
-8. Verifies that the container is running and that the Semaphore HTTP endpoint responds.
+8. Verifies that the container is running and that `http://127.0.0.1:3000/` responds.
 9. Removes the superseded image tag from the local Docker host.
 
 When no new stable version is available, the script exits successfully without rebuilding or restarting anything.
 
 If version lookup, backup, build, push, deployment, or health verification fails, the script restores the previous `.env` and recreates the previous Semaphore service. The pre-upgrade database dump is retained for manual recovery.
 
-The default health endpoint is:
-
-```text
-http://127.0.0.1:3000/
-```
-
-It can be overridden when Semaphore is checked through the reverse proxy:
-
-```bash
-SEMAPHORE_HEALTH_URL=https://ansible.internal.eclipse.tele.no/ \
-  bash scripts/update-semaphore.sh
-```
-
-Other optional runtime overrides include:
+Optional runtime overrides include:
 
 ```bash
 ENV_FILE=/path/to/.env
@@ -190,4 +179,4 @@ Python syntax
 Docker Compose interpolation and structure
 ```
 
-It does not perform a full image build or production deployment. The first execution on the Seed host must therefore be performed manually and reviewed before cron is enabled.
+It does not perform a full image build or production deployment. The first execution on the deployment host must therefore be performed manually and reviewed before cron is enabled.
