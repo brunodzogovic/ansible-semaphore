@@ -3,8 +3,10 @@ FROM ghcr.io/opentofu/opentofu:minimal AS tofu
 FROM python:3.13.1-slim-bullseye
 
 ARG SEMAPHORE_VERSION
+ARG KUBESPRAY_REF=master
 
 ENV SEMAPHORE_PLAYBOOK_PATH=/tmp/semaphore \
+    KUBESPRAY_DIR=/opt/kubespray \
     TZ=UTC
 
 # Install required packages
@@ -21,10 +23,10 @@ RUN apt-get update \
         unzip \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone --depth 1 https://github.com/kubernetes-sigs/kubespray /tmp/kubespray
+RUN git clone --depth 1 --branch "${KUBESPRAY_REF}" https://github.com/kubernetes-sigs/kubespray "${KUBESPRAY_DIR}"
 COPY requirements.txt /tmp/semaphore-requirements.txt
 
-RUN cd /tmp/kubespray \
+RUN cd "${KUBESPRAY_DIR}" \
     && pip install --no-cache-dir -U -r requirements.txt \
     && pip install --no-cache-dir -U -r /tmp/semaphore-requirements.txt
 
@@ -43,6 +45,6 @@ RUN chmod +x /semaphore/entrypoint.sh
 # Install Ansible requirements
 COPY requirements.yml /tmp/requirements.yml
 RUN ansible-galaxy collection install -r /tmp/requirements.yml \
-    && rm -rf /tmp/kubespray /tmp/requirements.yml /tmp/semaphore-requirements.txt
+    && rm -rf /tmp/requirements.yml /tmp/semaphore-requirements.txt
 
 ENTRYPOINT ["/semaphore/entrypoint.sh"]
