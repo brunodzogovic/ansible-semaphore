@@ -14,6 +14,7 @@ COPY --from=tofu /usr/local/bin/tofu /usr/local/bin/tofu
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git \
+        openssh-client \
         wget \
         gettext \
         curl \
