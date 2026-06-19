@@ -6,19 +6,20 @@ For first-time installation and rollout, see [QUICKSTART.md](QUICKSTART.md).
 
 ## Current implementation status
 
-The repository now includes a complete host-side update mechanism for Semaphore:
+The repository includes a complete host-side update mechanism for the Semaphore/Kubespray execution image:
 
-- stable release discovery from the official Semaphore GitHub Releases API;
+- stable release discovery from the official Semaphore and Kubespray GitHub Releases APIs;
 - explicit exclusion of draft, beta, release-candidate, and other prerelease versions;
-- automatic update of `SEMAPHORE_VERSION` in the local `.env` file;
-- image build using the updated version;
+- automatic update of `SEMAPHORE_VERSION` and `KUBESPRAY_REF` in the local `.env` file;
+- image build using both selected versions;
+- immutable Kubespray version metadata embedded in the image;
 - image push to the repository configured in `.env`;
 - pre-upgrade MySQL backup when the bundled MySQL service is running;
 - recreation of only the `semaphore-kubespray` service;
-- HTTP and container-state health verification after deployment;
+- HTTP, container-state, and embedded Kubespray-version verification after deployment;
 - rollback to the previous `.env` and previous image when an update fails;
 - removal of the superseded image from the local Docker host after a successful update;
-- optional daily cron installation;
+- optional cron installation;
 - validation of shell scripts, Python, and Compose configuration through GitHub Actions.
 
 The automation is implemented in:
@@ -30,16 +31,19 @@ scripts/install-update-cron.sh
 .github/workflows/validate.yml
 ```
 
-Remote registry cleanup is not automated yet. Registry deletion APIs differ between Docker Hub, GHCR, Harbor, and other registries. The current implementation removes only the old local image after the new deployment is verified.
+Remote registry cleanup is not automated. Registry deletion APIs differ between Docker Hub, GHCR, Harbor, and other registries. The current implementation removes only the old local image after the new deployment is verified.
+
+Updating the execution image does **not** automatically upgrade an existing Kubernetes cluster. It only changes the Kubespray toolchain available to Semaphore. Cluster upgrades remain explicit and must use the appropriate Kubespray upgrade workflow after reviewing the supported upgrade path.
 
 ## Local configuration
 
-The deployment is configured through `.env`. Keep the real `.env` local; it is excluded by `.gitignore`. The distributed/default file is intended as a template showing which values must be configured.
+The deployment is configured through `.env`. Keep the real `.env` local; it is excluded by `.gitignore`.
 
 The automatic updater requires at least:
 
 ```dotenv
-SEMAPHORE_VERSION=2.18.9
+SEMAPHORE_VERSION=2.18.12
+KUBESPRAY_REF=v2.31.0
 DOCKER_REPOSITORY_NAME=[docker-repo-name]
 CUSTOM_IMAGE_NAME=semaphore-kubespray
 ```
@@ -51,10 +55,16 @@ DOCKER_REPOSITORY_NAME=registry.example.com/cloud-images
 CUSTOM_IMAGE_NAME=semaphore-kubespray
 ```
 
-The resulting image reference is:
+The resulting image reference contains both component versions:
 
 ```text
-${DOCKER_REPOSITORY_NAME}/${CUSTOM_IMAGE_NAME}:${SEMAPHORE_VERSION}
+${DOCKER_REPOSITORY_NAME}/${CUSTOM_IMAGE_NAME}:${SEMAPHORE_VERSION}-kubespray-${KUBESPRAY_REF}
+```
+
+Example:
+
+```text
+registry.example.com/cloud-images/semaphore-kubespray:2.18.12-kubespray-v2.31.0
 ```
 
 Authenticate the Docker host to that registry before enabling automatic updates.
@@ -67,17 +77,29 @@ docker compose --env-file .env push semaphore-kubespray
 docker compose --env-file .env up -d
 ```
 
+Verify the running execution image:
+
+```bash
+docker exec semaphore-kubespray sh -c '
+echo "Runtime:  $KUBESPRAY_REF"
+echo "Metadata: $(cat "$KUBESPRAY_VERSION_FILE")"
+echo "Checkout: $(git -C "$KUBESPRAY_DIR" describe --tags --always)"
+'
+```
+
+All three values must match.
+
 ## Stable release detection
 
-`latest-version.py` reads Semaphore releases from the GitHub Releases API. Drafts and prereleases are explicitly ignored, so beta, release-candidate, and other prerelease builds are not selected.
+`latest-version.py` reads stable releases from both official GitHub repositories. Drafts and prereleases are ignored.
 
-Check the available version without modifying `.env`:
+Check available versions without modifying `.env`:
 
 ```bash
 python3 latest-version.py .env --check-only
 ```
 
-Update `SEMAPHORE_VERSION` in `.env`:
+Update both version values in `.env`:
 
 ```bash
 python3 latest-version.py .env
@@ -93,21 +115,22 @@ Run the complete flow manually first:
 bash scripts/update-semaphore.sh
 ```
 
-When a newer stable release exists, the script:
+When a newer stable Semaphore or Kubespray release exists, the script:
 
 1. Acquires a lock with `flock` to prevent overlapping runs.
-2. Records the current version and image reference.
-3. Updates `SEMAPHORE_VERSION` in `.env`.
+2. Records the current Semaphore version, Kubespray release, and composite image reference.
+3. Updates `SEMAPHORE_VERSION` and `KUBESPRAY_REF` in `.env`.
 4. Creates a MySQL dump under `backups/` when the Compose MySQL service is running.
-5. Builds the new version-tagged image.
+5. Builds a new image tagged with both component versions.
 6. Pushes it to `${DOCKER_REPOSITORY_NAME}/${CUSTOM_IMAGE_NAME}`.
 7. Recreates only the `semaphore-kubespray` service.
-8. Verifies that the container is running and that the Semaphore HTTP endpoint responds.
-9. Removes the superseded image tag from the local Docker host.
+8. Verifies the container and Semaphore HTTP endpoint.
+9. Verifies that runtime `KUBESPRAY_REF`, immutable image metadata, and the actual Git checkout all match.
+10. Removes the superseded composite image tag from the local Docker host.
 
-When no new stable version is available, the script exits successfully without rebuilding or restarting anything.
+When neither component has a newer stable release, the script exits successfully without rebuilding or restarting anything.
 
-If version lookup, backup, build, push, deployment, or health verification fails, the script restores the previous `.env` and recreates the previous Semaphore service. The pre-upgrade database dump is retained for manual recovery.
+If lookup, backup, build, push, deployment, health verification, or version verification fails, the script restores the previous `.env` and recreates the previous service. The database dump is retained for recovery.
 
 The default health endpoint is:
 
@@ -134,16 +157,16 @@ SEMAPHORE_HEALTH_RETRY_DELAY=5
 
 ## Cron installation
 
-Install a daily check at 03:17 local time:
+Install the configured periodic check:
 
 ```bash
 bash scripts/install-update-cron.sh
 ```
 
-Use a different cron schedule:
+Use a weekly schedule, for example Sunday at 03:17:
 
 ```bash
-bash scripts/install-update-cron.sh --schedule '17 4 * * *'
+bash scripts/install-update-cron.sh --schedule '17 3 * * 0'
 ```
 
 Remove the cron entry:
@@ -172,7 +195,7 @@ The updater may create:
 
 ```text
 .env.bak
-backups/semaphore-db-<timestamp>-before-<version>.sql
+backups/semaphore-db-<timestamp>-before-<semaphore>-kubespray-<kubespray>.sql
 logs/semaphore-update.log
 ```
 
