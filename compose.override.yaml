@@ -4,6 +4,8 @@ services:
       args:
         KUBESPRAY_REF: ${KUBESPRAY_REF}
     environment:
+      KUBESPRAY_REF: ${KUBESPRAY_REF}
       KUBESPRAY_DIR: /opt/kubespray
+      KUBESPRAY_VERSION_FILE: /opt/kubespray/.eclipse-kubespray-version
     volumes:
       - /opt/eclipse-cluster-config:/opt/eclipse-cluster-config
