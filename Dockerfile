@@ -7,6 +7,8 @@ ARG KUBESPRAY_REF=v2.31.0
 
 ENV SEMAPHORE_PLAYBOOK_PATH=/tmp/semaphore \
     KUBESPRAY_DIR=/opt/kubespray \
+    KUBESPRAY_REF=${KUBESPRAY_REF} \
+    KUBESPRAY_VERSION_FILE=/opt/kubespray/.eclipse-kubespray-version \
     TZ=UTC
 
 # Install required packages
@@ -24,7 +26,12 @@ RUN apt-get update \
         unzip \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone --depth 1 --branch "${KUBESPRAY_REF}" https://github.com/kubernetes-sigs/kubespray "${KUBESPRAY_DIR}"
+# Embed the exact Kubespray release selected by Compose/.env into the image.
+RUN test -n "${KUBESPRAY_REF}" \
+    && git clone --depth 1 --branch "${KUBESPRAY_REF}" https://github.com/kubernetes-sigs/kubespray "${KUBESPRAY_DIR}" \
+    && printf '%s\n' "${KUBESPRAY_REF}" > "${KUBESPRAY_VERSION_FILE}" \
+    && test "$(git -C "${KUBESPRAY_DIR}" describe --tags --always)" = "${KUBESPRAY_REF}"
+
 COPY requirements.txt /tmp/semaphore-requirements.txt
 
 RUN cd "${KUBESPRAY_DIR}" \
