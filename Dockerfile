@@ -3,7 +3,7 @@ FROM ghcr.io/opentofu/opentofu:minimal AS tofu
 FROM python:3.13.1-slim-bullseye
 
 ARG SEMAPHORE_VERSION
-ARG KUBESPRAY_REF=master
+ARG KUBESPRAY_REF=v2.31.0
 
 ENV SEMAPHORE_PLAYBOOK_PATH=/tmp/semaphore \
     KUBESPRAY_DIR=/opt/kubespray \
