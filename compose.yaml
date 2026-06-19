@@ -13,7 +13,8 @@ services:
       dockerfile: Dockerfile
       args:
         SEMAPHORE_VERSION: ${SEMAPHORE_VERSION}
-    image: ${DOCKER_REPOSITORY_NAME}/${CUSTOM_IMAGE_NAME}:${SEMAPHORE_VERSION}
+        KUBESPRAY_REF: ${KUBESPRAY_REF}
+    image: ${DOCKER_REPOSITORY_NAME}/${CUSTOM_IMAGE_NAME}:${SEMAPHORE_VERSION}-kubespray-${KUBESPRAY_REF}
     container_name: semaphore-kubespray
     environment:
       SEMAPHORE_DB_USER: ${DB_USER}
